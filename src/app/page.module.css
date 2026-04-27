@@ -1,0 +1,1265 @@
+.pageShell {
+  --ink: #101828;
+  --muted: #667085;
+  --line: rgba(16, 24, 40, 0.1);
+  --brand: #123d57;
+  --brand-strong: #0b2d42;
+  --accent: #b7793f;
+  --soft: #f7fafc;
+  --page: rgba(255, 255, 255, 0.88);
+  --panel: rgba(255, 255, 255, 0.88);
+  --panel-solid: #ffffff;
+  --field: #fbfcfe;
+  --subtle: #f7f9fc;
+  --hero-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(239, 247, 246, 0.98) 54%, rgba(255, 248, 237, 0.96) 100%);
+  --shadow: 0 20px 60px rgba(16, 24, 40, 0.09);
+  width: min(1440px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 18px 0 64px;
+  color: var(--ink);
+  transition: color 240ms ease, filter 240ms ease;
+}
+
+.pageShell[data-theme="escuro"] {
+  --ink: #eef4ff;
+  --muted: #aab7c8;
+  --line: rgba(226, 232, 240, 0.16);
+  --brand: #5bb3d3;
+  --brand-strong: #256f8e;
+  --accent: #f0b86e;
+  --soft: #101a27;
+  --page: rgba(12, 18, 29, 0.84);
+  --panel: rgba(15, 23, 42, 0.86);
+  --panel-solid: #111827;
+  --field: #0f172a;
+  --subtle: #162033;
+  --hero-bg: linear-gradient(135deg, rgba(13, 20, 32, 0.96), rgba(20, 35, 47, 0.96) 52%, rgba(46, 35, 24, 0.92));
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+
+.topbar,
+.hero,
+.panel,
+.metricGrid article {
+  border: 1px solid rgba(20, 30, 44, 0.12);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  animation: fadeUp 520ms ease both;
+}
+
+.topbar {
+  position: sticky;
+  top: 12px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 16px;
+  background: var(--panel);
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+
+.topbar h1,
+.hero h2,
+.sectionTitle h2 {
+  color: #172033;
+  color: var(--ink);
+  letter-spacing: 0;
+}
+
+.topbar h1 {
+  font-size: 1.45rem;
+}
+
+.kicker,
+.metricGrid span,
+.badge,
+.vehicleCard span,
+.suggestionCard span,
+.noticeList span,
+.reportGrid span {
+  color: #687385;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tabs,
+.heroActions,
+.rowActions,
+.cardFooter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.themeToggle,
+.accountTopButton,
+.logoutButton {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: var(--panel-solid);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.accountTopButton {
+  background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+  color: #ffffff;
+  border-color: var(--brand);
+}
+
+.logoutButton {
+  background: #fff1f1;
+  color: #991b1b;
+}
+
+.themeToggle:hover,
+.accountTopButton:hover,
+.logoutButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(16, 24, 40, 0.12);
+}
+
+.tab,
+.tabActive,
+.heroActions a,
+.primaryButton,
+.vehicleCard button,
+.suggestionCard button,
+.rowActions button,
+.compactList button {
+  min-height: 42px;
+  border: 1px solid rgba(35, 49, 69, 0.14);
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.tab,
+.rowActions button,
+.compactList button {
+  background: var(--subtle);
+  color: var(--ink);
+}
+
+.tab:hover,
+.tabActive:hover,
+.heroActions a:hover,
+.primaryButton:hover,
+.vehicleCard button:hover,
+.suggestionCard button:hover,
+.rowActions button:hover,
+.compactList button:hover {
+  transform: translateY(-1px);
+}
+
+.primaryButton,
+.heroActions a:first-child,
+.vehicleCard button,
+.suggestionCard button {
+  position: relative;
+  overflow: hidden;
+}
+
+.primaryButton::after,
+.heroActions a:first-child::after,
+.vehicleCard button::after,
+.suggestionCard button::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -70%;
+  width: 54%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
+  transform: skewX(-18deg);
+  animation: buttonSheen 4.2s ease-in-out infinite;
+}
+
+.tabActive,
+.heroActions a:first-child,
+.primaryButton,
+.vehicleCard button,
+.suggestionCard button {
+  background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+  color: #ffffff;
+  border-color: var(--brand);
+  box-shadow: 0 12px 26px rgba(18, 61, 87, 0.18);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(420px, 1.05fr);
+  gap: 28px;
+  align-items: stretch;
+  margin-top: 18px;
+  padding: 24px;
+  background:
+    var(--hero-bg);
+  overflow: hidden;
+}
+
+.heroCopy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 360px;
+}
+
+.heroCopy h2 {
+  max-width: 680px;
+  margin-top: 12px;
+  font-size: clamp(2.35rem, 4.2vw, 4.45rem);
+  line-height: 1;
+}
+
+.heroCopy p {
+  max-width: 720px;
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.heroActions {
+  margin-top: 24px;
+}
+
+.heroSearch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 14px;
+  max-width: 640px;
+  margin-top: 22px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel-solid) 76%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.heroSearch div {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.heroSearch span {
+  color: #687385;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.heroSearch strong {
+  color: var(--ink);
+}
+
+.heroActions a:last-child {
+  background: var(--panel-solid);
+  color: var(--brand);
+}
+
+.heroMedia {
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(220, 232, 238, 0.5)),
+    #eef2f5;
+  box-shadow: inset 0 0 0 1px rgba(16, 24, 40, 0.08);
+}
+
+.heroMedia img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: center;
+}
+
+.heroMedia div {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #172033;
+}
+
+.heroMedia strong,
+.heroMedia span {
+  display: block;
+}
+
+.heroDeal {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: grid;
+  gap: 2px;
+  width: 180px;
+  padding: 14px;
+  border-radius: 8px;
+  background: rgba(23, 32, 51, 0.9);
+  color: #ffffff;
+}
+
+.heroDeal span,
+.heroDeal small {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.heroDeal strong {
+  font-size: 1.45rem;
+}
+
+.metricGrid,
+.workspace,
+.suggestionGrid,
+.vehicleGrid,
+.filters,
+.reportGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.metricGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
+.metricGrid article,
+.panel {
+  padding: 20px;
+}
+
+.panel,
+.metricGrid article,
+.vehicleCard,
+.suggestionCard {
+  backdrop-filter: blur(12px);
+}
+
+.metricGrid strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 1.65rem;
+}
+
+.metricGrid article {
+  position: relative;
+  overflow: hidden;
+}
+
+.metricGrid article::after {
+  content: "";
+  position: absolute;
+  inset: auto 18px 0;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(90deg, var(--brand), var(--accent));
+  opacity: 0.7;
+}
+
+.metricGrid small {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+.workspace {
+  grid-template-columns: minmax(0, 1fr) 380px;
+  align-items: start;
+  margin-top: 18px;
+}
+
+.mainColumn,
+.sideColumn {
+  display: grid;
+  gap: 16px;
+}
+
+.sideColumn {
+  position: sticky;
+  top: 96px;
+}
+
+.sectionTitle {
+  margin-bottom: 16px;
+}
+
+.sectionTitle h2 {
+  margin-top: 8px;
+  font-size: 1.45rem;
+}
+
+.textarea,
+.field input,
+.field select,
+.filters input,
+.filters select,
+.filters label,
+.formGrid input {
+  width: 100%;
+}
+
+.textarea,
+.field input,
+.field select,
+.filters select,
+.formGrid input {
+  border: 1px solid rgba(35, 49, 69, 0.16);
+  border-radius: 8px;
+  background: var(--field);
+  color: var(--ink);
+  outline: none;
+}
+
+.textarea {
+  min-height: 96px;
+  padding: 14px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.textarea:focus,
+.field input:focus,
+.field select:focus,
+.filters select:focus,
+.formGrid input:focus {
+  border-color: #2d6f83;
+  box-shadow: 0 0 0 4px rgba(45, 111, 131, 0.12);
+}
+
+.suggestionGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.suggestionCard,
+.vehicleCard {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-solid);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  animation: cardIn 560ms ease both;
+}
+
+.suggestionCard:hover,
+.vehicleCard:hover {
+  transform: translateY(-6px) scale(1.01);
+  border-color: rgba(18, 61, 87, 0.22);
+  box-shadow: 0 18px 46px rgba(16, 24, 40, 0.12);
+}
+
+.suggestionCard img,
+.vehicleCard img {
+  width: 100%;
+  height: 172px;
+  object-fit: contain;
+  background: #e9edf2;
+}
+
+.suggestionCard div,
+.vehicleBody {
+  padding: 16px;
+}
+
+.suggestionCard strong,
+.vehicleBody h3 {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 1.08rem;
+}
+
+.suggestionCard p,
+.vehicleBody p,
+.feedback,
+.checkList,
+.noticeList p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.suggestionCard p,
+.vehicleBody p {
+  min-height: 78px;
+  margin-top: 8px;
+}
+
+.filters {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 14px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--panel-solid) 96%, transparent), var(--subtle));
+  border: 1px solid var(--line);
+}
+
+.filters label,
+.field {
+  display: grid;
+  gap: 8px;
+  color: #526071;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.filters input,
+.filters select,
+.field input,
+.field select,
+.formGrid input {
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.vehicleGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #e6f3ef;
+  color: #17604f;
+}
+
+.cardFooter {
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.cardFooter strong {
+  color: var(--ink);
+}
+
+.field + .field,
+.primaryButton,
+.feedback {
+  margin-top: 12px;
+}
+
+.primaryButton {
+  width: 100%;
+}
+
+.secondaryButton {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 10px;
+  border: 1px solid rgba(35, 49, 69, 0.14);
+  border-radius: 8px;
+  background: #f7f9fc;
+  background: var(--subtle);
+  color: var(--brand);
+  cursor: pointer;
+}
+
+.secondaryButton:hover {
+  background: #edf4f7;
+}
+
+.primaryButton:disabled,
+.vehicleCard button:disabled {
+  cursor: not-allowed;
+  border-color: rgba(35, 49, 69, 0.12);
+  background: #dbe2ea;
+  color: #64748b;
+}
+
+.muted {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.loginShell {
+  display: grid;
+  place-items: center;
+  min-height: 420px;
+  margin-top: 18px;
+}
+
+.loginShell .panel {
+  width: min(520px, 100%);
+}
+
+.loginShell h2 {
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 1.65rem;
+}
+
+.credentialBox {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 14px;
+  border-radius: 8px;
+  background: #edf7f5;
+  color: #173b57;
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+}
+
+.accountHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.accountHeader h2 {
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 1.35rem;
+}
+
+.accountStatus,
+.accountStatusMuted {
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.accountStatus {
+  background: #e6f3ef;
+  color: #17604f;
+}
+
+.accountStatusMuted {
+  background: var(--subtle);
+  color: var(--muted);
+}
+
+.accountBox {
+  display: grid;
+  gap: 12px;
+}
+
+.accountTabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 6px;
+  border-radius: 8px;
+  background: var(--subtle);
+}
+
+.accountTab,
+.accountTabActive {
+  min-height: 38px;
+  border-radius: 8px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.accountTab {
+  background: transparent;
+}
+
+.accountTabActive {
+  background: var(--panel-solid);
+  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.1);
+}
+
+.accountSummary {
+  display: grid;
+  gap: 10px;
+}
+
+.accountSummary div {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--subtle);
+}
+
+.accountSummary span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.accountSummary strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink);
+}
+
+.checkoutError {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(185, 28, 28, 0.18);
+  border-radius: 8px;
+  background: #fff1f1;
+  color: #991b1b;
+  line-height: 1.5;
+}
+
+.checkList {
+  display: grid;
+  gap: 10px;
+  padding-left: 18px;
+}
+
+.tableList,
+.compactList,
+.noticeList {
+  display: grid;
+  gap: 12px;
+}
+
+.tableList article {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--subtle);
+}
+
+.tableList strong,
+.compactList strong {
+  color: var(--ink);
+}
+
+.tableList span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.formGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.formGrid select,
+.formGrid input[type="file"],
+.fleetRows select {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--field);
+  color: var(--ink);
+}
+
+.formGrid input[type="file"] {
+  padding: 10px 12px;
+}
+
+.imagePreview {
+  overflow: hidden;
+  margin-bottom: 14px;
+  border: 1px solid rgba(35, 49, 69, 0.12);
+  border-radius: 8px;
+  background: var(--subtle);
+}
+
+.imagePreview img {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+}
+
+.compactList button {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+}
+
+.fleetRows {
+  display: grid;
+  gap: 12px;
+}
+
+.fleetRows article {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) 170px;
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--subtle);
+}
+
+.fleetRows img {
+  width: 112px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #e9edf2;
+}
+
+.fleetRows strong,
+.auditGrid strong {
+  display: block;
+  color: var(--ink);
+}
+
+.fleetRows span,
+.auditGrid span,
+.tableList small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.reportGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.auditGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.reportGrid article,
+.noticeList article,
+.auditGrid article {
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--subtle);
+}
+
+.reportGrid strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 1.25rem;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.56);
+  backdrop-filter: blur(8px);
+  animation: fadeOverlay 220ms ease both;
+}
+
+.checkoutModal {
+  position: relative;
+  width: min(1040px, 100%);
+  max-height: min(860px, calc(100vh - 40px));
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 8px;
+  background: var(--panel-solid);
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.32);
+  animation: modalIn 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.accountModal {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 8px;
+  background: var(--panel-solid);
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.32);
+  animation: modalIn 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.closeButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  min-height: 38px;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: rgba(23, 32, 51, 0.9);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.checkoutHero {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+  gap: 22px;
+  align-items: center;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 88% 0%, rgba(183, 121, 63, 0.18), transparent 28%),
+    linear-gradient(135deg, #f8fafc, #eef7f5);
+}
+
+.checkoutHero img {
+  width: 100%;
+  height: 300px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #eef2f5;
+  box-shadow: inset 0 0 0 1px rgba(16, 24, 40, 0.08);
+}
+
+.checkoutHero h2 {
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1;
+}
+
+.checkoutHero p {
+  margin-top: 12px;
+  color: var(--muted);
+}
+
+.checkoutTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.checkoutTags span,
+.checkoutSteps span {
+  border-radius: 999px;
+  padding: 8px 10px;
+  background: #e9f4f2;
+  color: #246275;
+  font-size: 0.86rem;
+}
+
+.checkoutSteps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px 22px 0;
+}
+
+.checkoutSteps .stepActive {
+  background: #173b57;
+  color: #ffffff;
+}
+
+.checkoutGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
+  gap: 16px;
+  padding: 22px;
+}
+
+.checkoutPanel {
+  padding: 18px;
+  border: 1px solid rgba(35, 49, 69, 0.1);
+  border-radius: 8px;
+  background: var(--panel-solid);
+  box-shadow: 0 14px 34px rgba(16, 24, 40, 0.06);
+}
+
+.checkoutPanel h3,
+.successBox h3 {
+  color: var(--ink);
+  font-size: 1.25rem;
+}
+
+.summaryList,
+.priceList {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.summaryList div,
+.priceList div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(35, 49, 69, 0.08);
+}
+
+.summaryList dt,
+.priceList dt {
+  color: var(--muted);
+}
+
+.summaryList dd,
+.priceList dd {
+  color: var(--ink);
+  font-weight: 700;
+  text-align: right;
+}
+
+.priceList div:last-child {
+  padding-top: 8px;
+  border-bottom: 0;
+}
+
+.priceList div:last-child dd,
+.priceList div:last-child dt {
+  color: #173b57;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.twoFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.successBox {
+  display: grid;
+  gap: 12px;
+  margin: 22px;
+  padding: 22px;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(230, 243, 239, 0.92), rgba(255, 248, 237, 0.9));
+  color: #526071;
+  color: var(--muted);
+  border: 1px solid rgba(23, 96, 79, 0.14);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeOverlay {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes buttonSheen {
+  0%,
+  42% {
+    left: -70%;
+  }
+
+  58%,
+  100% {
+    left: 125%;
+  }
+}
+
+@keyframes carFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes softPulse {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.heroMedia img {
+  animation: fadeUp 680ms ease both, carFloat 5.6s ease-in-out 900ms infinite;
+}
+
+.heroDeal {
+  animation: softPulse 3.4s ease-in-out infinite;
+}
+
+.vehicleCard:nth-child(2n),
+.suggestionCard:nth-child(2n),
+.metricGrid article:nth-child(2n) {
+  animation-delay: 100ms;
+}
+
+.vehicleCard:nth-child(3n),
+.suggestionCard:nth-child(3n),
+.metricGrid article:nth-child(3n) {
+  animation-delay: 190ms;
+}
+
+.vehicleCard:nth-child(4n),
+.metricGrid article:nth-child(4n) {
+  animation-delay: 270ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar,
+  .hero,
+  .panel,
+  .metricGrid article,
+  .vehicleCard,
+  .suggestionCard,
+  .heroMedia img,
+  .heroDeal {
+    animation: none;
+    transition: none;
+  }
+}
+
+@media (max-width: 1180px) {
+  .hero,
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .checkoutHero,
+  .checkoutGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sideColumn {
+    position: static;
+  }
+
+  .metricGrid,
+  .vehicleGrid,
+  .suggestionGrid,
+  .filters,
+  .reportGrid,
+  .auditGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fleetRows article {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .fleetRows select {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .pageShell {
+    width: min(100vw - 18px, 100%);
+    padding-top: 10px;
+  }
+
+  .topbar,
+  .tableList article,
+  .heroMedia div {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hero,
+  .panel,
+  .metricGrid article {
+    padding: 16px;
+  }
+
+  .metricGrid,
+  .vehicleGrid,
+  .suggestionGrid,
+  .filters,
+  .reportGrid,
+  .auditGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .fleetRows article {
+    grid-template-columns: 1fr;
+  }
+
+  .fleetRows img {
+    width: 100%;
+    height: 180px;
+  }
+
+  .heroCopy {
+    min-height: auto;
+  }
+
+  .heroMedia {
+    min-height: 260px;
+  }
+
+  .heroSearch,
+  .twoFields {
+    grid-template-columns: 1fr;
+  }
+
+  .checkoutHero img {
+    height: 220px;
+  }
+
+  .tab,
+  .tabActive,
+  .themeToggle,
+  .accountTopButton,
+  .logoutButton,
+  .heroActions a,
+  .rowActions button {
+    width: 100%;
+  }
+}
