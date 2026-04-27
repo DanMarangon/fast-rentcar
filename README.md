@@ -17,7 +17,7 @@ Plataforma web de locacao de veiculos criada a partir dos requisitos do BRD e da
 ## Como executar
 
 ```bash
-cd C:\Users\Dan\Desktop\.net\trabalho\perp-dex-cost-app
+cd C:\Users\Dan\Desktop\.net\trabalho\fast-rentcar
 npm run dev
 ```
 
