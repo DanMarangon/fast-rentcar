@@ -17,7 +17,9 @@ Plataforma web de locacao de veiculos criada a partir dos requisitos do BRD e da
 ## Como executar
 
 ```bash
-cd C:\Users\Dan\Desktop\.net\trabalho\fast-rentcar
+git clone https://github.com/DanMarangon/fast-rentcar.git
+cd fast-rentcar
+npm install
 npm run dev
 ```
 
