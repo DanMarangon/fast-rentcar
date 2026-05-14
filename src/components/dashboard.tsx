@@ -493,6 +493,23 @@ export function Dashboard() {
     setConsultoriaStatus("idle");
   }
 
+  function limparConsultoria() {
+    setConsultoria(null);
+    setConsultoriaErro("");
+    setConsultoriaStatus("idle");
+  }
+
+  function alterarRetirada(valor: string) {
+    setRetirada(valor);
+    if (devolucao < valor) setDevolucao(valor);
+    limparConsultoria();
+  }
+
+  function alterarDevolucao(valor: string) {
+    setDevolucao(valor);
+    limparConsultoria();
+  }
+
   async function consultarIA() {
     if (!consulta.trim()) {
       setConsultoriaStatus("erro");
@@ -994,8 +1011,8 @@ export function Dashboard() {
             <section className={styles.panel}>
               <div className={styles.sectionTitle}><span className={styles.kicker}>Fluxo de reserva</span><h2>Dados da locacao</h2></div>
               <label className={styles.field}>Cliente<input value={clienteLogado ? usuario.nome : "Entre para reservar"} readOnly /></label>
-              <label className={styles.field}>Retirada<input value={retirada} min={dateInput(hoje)} onChange={(event) => { setRetirada(event.target.value); setConsultoria(null); }} type="date" /></label>
-              <label className={styles.field}>Devolucao<input value={devolucao} min={retirada} onChange={(event) => { setDevolucao(event.target.value); setConsultoria(null); }} type="date" /></label>
+              <label className={styles.field}>Retirada<input value={retirada} min={dateInput(hoje)} onChange={(event) => alterarRetirada(event.target.value)} type="date" /></label>
+              <label className={styles.field}>Devolucao<input value={devolucao} min={retirada} onChange={(event) => alterarDevolucao(event.target.value)} type="date" /></label>
               <label className={styles.field}>Veiculo<select value={selecionado} onChange={(event) => setSelecionado(event.target.value)}>{estado.veiculos.map((veiculo) => <option value={veiculo.id} key={veiculo.id}>{veiculo.marca} {veiculo.modelo}</option>)}</select></label>
               <button className={styles.primaryButton} onClick={() => abrirReserva(selecionado)} type="button">Ver detalhes e reservar</button>
               <p className={styles.feedback}>{feedback}</p>
@@ -1008,7 +1025,32 @@ export function Dashboard() {
       {aba === "locadora" && logado.locadora ? (
         <section className={styles.workspace}>
           <div className={styles.mainColumn}>
-            <section className={styles.panel}><div className={styles.sectionTitle}><span className={styles.kicker}>Gestao de reservas</span><h2>Check-in, check-out e cancelamentos</h2></div><div className={styles.tableList}>{reservasEnriquecidas.map((reserva) => <article key={reserva.id}><div><strong>{reserva.id} - {reserva.cliente}</strong><span>{reserva.veiculo?.marca} {reserva.veiculo?.modelo} | {reserva.retirada} a {reserva.devolucao} | {moeda.format(reserva.total)}</span><small>{reserva.observacao}</small></div><div className={styles.rowActions}><span className={styles.badge}>{reserva.status}</span><button onClick={() => mudarStatusReserva(reserva.id, "ativa")} type="button">Check-in</button><button onClick={() => mudarStatusReserva(reserva.id, "concluida")} type="button">Check-out</button><button onClick={() => cancelarReserva(reserva.id)} type="button">Cancelar</button></div></article>)}</div></section>
+            <section className={styles.panel}>
+              <div className={styles.sectionTitle}><span className={styles.kicker}>Gestao de reservas</span><h2>Check-in, check-out e cancelamentos</h2></div>
+              <div className={styles.tableList}>
+                {reservasEnriquecidas.map((reserva) => {
+                  const podeCheckIn = ["pendente", "confirmada"].includes(reserva.status);
+                  const podeCheckOut = reserva.status === "ativa";
+                  const podeCancelar = !["cancelada", "concluida"].includes(reserva.status);
+
+                  return (
+                    <article key={reserva.id}>
+                      <div>
+                        <strong>{reserva.id} - {reserva.cliente}</strong>
+                        <span>{reserva.veiculo?.marca} {reserva.veiculo?.modelo} | {reserva.retirada} a {reserva.devolucao} | {moeda.format(reserva.total)}</span>
+                        <small>{reserva.observacao}</small>
+                      </div>
+                      <div className={styles.rowActions}>
+                        <span className={styles.badge}>{reserva.status}</span>
+                        <button disabled={!podeCheckIn} onClick={() => mudarStatusReserva(reserva.id, "ativa")} type="button">Check-in</button>
+                        <button disabled={!podeCheckOut} onClick={() => mudarStatusReserva(reserva.id, "concluida")} type="button">Check-out</button>
+                        <button disabled={!podeCancelar} onClick={() => cancelarReserva(reserva.id)} type="button">Cancelar</button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
             <section className={styles.panel}><div className={styles.sectionTitle}><span className={styles.kicker}>Frota cadastrada</span><h2>Modelos, fotos e disponibilidade</h2></div><div className={styles.fleetRows}>{estado.veiculos.map((veiculo) => <article key={veiculo.id}><img alt={`${veiculo.marca} ${veiculo.modelo}`} src={veiculo.imagem} /><div><strong>{veiculo.marca} {veiculo.modelo}</strong><span>{veiculo.categoria} | {veiculo.cidade} | {moeda.format(veiculo.diaria)}/dia</span></div><select value={veiculo.status} onChange={(event) => alternarStatusVeiculo(veiculo.id, event.target.value as StatusVeiculo)}><option value="disponivel">Disponivel</option><option value="alugado">Alugado</option><option value="reservado">Reservado</option><option value="manutencao">Em manutencao</option></select></article>)}</div></section>
           </div>
           <aside className={styles.sideColumn}>
