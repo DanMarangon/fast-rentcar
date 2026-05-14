@@ -65,6 +65,34 @@ type Mensagem = {
   data: string;
 };
 
+type SugestaoConsultor = {
+  veiculoId: string;
+  score: number;
+  motivo: string;
+  custoEstimado: number;
+  adequacaoFinanceira: string;
+  alerta?: string | null;
+  reservavel: boolean;
+};
+
+type ConsultoriaResposta = {
+  fonte: "integrada" | "openai" | "ollama" | "local";
+  resumo: string;
+  criterios: string[];
+  avisos: string[];
+  perfilExtraido: {
+    idade?: number | null;
+    rendaMensal?: number | null;
+    cidade?: string | null;
+    objetivo: string;
+    periodoDias: number;
+    limiteDiaria: number;
+    elegivel: boolean;
+    motivoElegibilidade?: string | null;
+  };
+  sugestoes: SugestaoConsultor[];
+};
+
 type AppState = {
   veiculos: Veiculo[];
   reservas: Reserva[];
@@ -91,7 +119,7 @@ const hoje = new Date();
 const amanha = new Date(hoje.getTime() + 24 * 60 * 60 * 1000);
 const daquiQuatroDias = new Date(hoje.getTime() + 4 * 24 * 60 * 60 * 1000);
 const ontem = new Date(hoje.getTime() - 24 * 60 * 60 * 1000);
-const storageKey = "fast-rentcar:mvp:v5";
+const storageKey = "fast-rentcar:mvp:v7";
 const moeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const numero = new Intl.NumberFormat("pt-BR");
 
@@ -151,6 +179,26 @@ const frotaBase: Veiculo[] = [
   ["v20", "Moveloc Campinas", "Citroen", "C3", "Hatch economico", "Campinas", "Manual", "Flex", 119, 69000, 10, 4.3, "disponivel", "CT3-2023", 31400, ["baixo custo", "ar condicionado", "uso urbano"], "#0ea5e9", "sedan"],
   ["v21", "Carga Facil", "Renault", "Oroch", "Picape intermediaria", "Curitiba", "Automatico", "Flex", 249, 124000, 3, 4.4, "manutencao", "ORC-2022", 68200, ["cacamba", "cabine dupla", "trabalho e lazer"], "#92400e", "suv"],
   ["v22", "Prime Drive Centro", "Mercedes-Benz", "C180", "Executivo luxo", "Sao Paulo", "Automatico", "Gasolina", 589, 318000, 1, 4.9, "disponivel", "MBC-180", 17200, ["luxo", "conforto acustico", "bancos eletricos"], "#374151", "sedan"],
+  ["v23", "Performance Rio", "Subaru", "WRX", "Esportivo", "Rio de Janeiro", "Automatico", "Gasolina", 349, 218000, 2, 4.8, "disponivel", "WRX-2024", 18400, ["motor turbo", "tracao integral", "bancos esportivos"], "#1d4ed8", "sedan"],
+  ["v24", "Performance Rio", "Porsche", "Panamera", "Sedan esportivo premium", "Rio de Janeiro", "Automatico", "Gasolina", 489, 520000, 1, 4.9, "disponivel", "PAN-2024", 12600, ["performance", "acabamento premium", "conforto esportivo"], "#111827", "sedan"],
+  ["v25", "Exotic Drive DF", "Lamborghini", "Huracan", "Esportivo luxo", "Brasilia", "Automatico", "Gasolina", 1890, 2800000, 1, 5.0, "disponivel", "LAM-HUR", 6100, ["superesportivo", "performance", "experiencia premium"], "#f59e0b", "sedan"],
+  ["v26", "Exotic Drive DF", "Ferrari", "Roma", "Conversivel esportivo", "Brasilia", "Automatico", "Gasolina", 2100, 3200000, 1, 5.0, "disponivel", "FER-ROM", 4800, ["conversivel", "motor esportivo", "luxo"], "#dc2626", "sedan"],
+  ["v27", "Centro-Oeste Trucks", "RAM", "Rampage", "Picape premium", "Brasilia", "Automatico", "Diesel", 489, 268000, 3, 4.8, "disponivel", "RAM-DF1", 14300, ["cacamba", "diesel", "acabamento premium"], "#334155", "suv"],
+  ["v28", "Amazon Rent", "Jeep", "Renegade", "SUV compacto", "Manaus", "Automatico", "Flex", 239, 128000, 5, 4.6, "disponivel", "JEP-MAO", 20500, ["altura elevada", "multimidia", "bom consumo"], "#0f766e", "suv"],
+  ["v29", "Amazon Rent", "Toyota", "Hilux", "Picape diesel", "Manaus", "Automatico", "Diesel", 459, 312000, 2, 4.8, "disponivel", "HLX-MAO", 18800, ["diesel", "tracao", "cacamba"], "#78350f", "suv"],
+  ["v30", "Amazon Eco", "BYD", "Dolphin", "Eletrico urbano", "Manaus", "Automatico", "Eletrico", 279, 149000, 3, 4.8, "disponivel", "BYD-MAO", 7200, ["eletrico", "silencioso", "baixo consumo"], "#0891b2", "sedan"],
+  ["v31", "Belem Mobilidade", "Chevrolet", "Spin", "Minivan 7 lugares", "Belem", "Automatico", "Flex", 249, 119000, 4, 4.6, "disponivel", "SPN-BEL", 27800, ["7 lugares", "porta-malas amplo", "isofix"], "#475569", "suv"],
+  ["v32", "Belem Mobilidade", "Renault", "Kwid", "Hatch economico", "Belem", "Manual", "Flex", 99, 56000, 8, 4.2, "disponivel", "KWD-BEL", 42100, ["baixo custo", "facil de estacionar", "ar condicionado"], "#16a34a", "sedan"],
+  ["v33", "Salvador Premium", "BMW", "X1", "SUV premium", "Salvador", "Automatico", "Gasolina", 399, 286000, 2, 4.8, "disponivel", "BMW-SSA", 12400, ["premium", "conforto", "altura elevada"], "#111827", "suv"],
+  ["v34", "Salvador Rent", "Fiat", "Argo", "Hatch economico", "Salvador", "Manual", "Flex", 118, 78000, 7, 4.4, "disponivel", "ARG-SSA", 31500, ["baixo consumo", "ar condicionado", "uso urbano"], "#0891b2", "sedan"],
+  ["v35", "Recife Executive", "Mercedes-Benz", "GLA 200", "SUV luxo", "Recife", "Automatico", "Gasolina", 429, 310000, 2, 4.8, "disponivel", "GLA-REC", 10900, ["luxo", "conforto", "assistentes de conducao"], "#374151", "suv"],
+  ["v36", "Recife Familia", "Kia", "Carnival", "Minivan 7 lugares", "Recife", "Automatico", "Gasolina", 389, 320000, 2, 4.7, "disponivel", "KIA-REC", 16400, ["7 lugares", "familia grande", "porta-malas amplo"], "#7c3aed", "suv"],
+  ["v37", "Sul Performance", "Porsche", "911 Carrera", "Esportivo luxo", "Porto Alegre", "Automatico", "Gasolina", 1750, 1900000, 1, 5.0, "disponivel", "911-POA", 5300, ["superesportivo", "performance", "experiencia premium"], "#b42318", "sedan"],
+  ["v38", "Sul Premium", "Volvo", "XC40", "SUV premium", "Porto Alegre", "Automatico", "Hibrido", 349, 260000, 3, 4.8, "disponivel", "VOL-POA", 14200, ["hibrido", "seguranca", "acabamento premium"], "#334155", "suv"],
+  ["v39", "Floripa Eco", "Tesla", "Model 3", "Eletrico premium", "Florianopolis", "Automatico", "Eletrico", 449, 330000, 2, 4.9, "disponivel", "TES-FLN", 8800, ["eletrico", "premium", "silencioso"], "#020617", "sedan"],
+  ["v40", "Floripa Style", "Mini", "Cooper", "Compacto premium", "Florianopolis", "Automatico", "Gasolina", 289, 198000, 3, 4.7, "disponivel", "MIN-FLN", 21300, ["compacto premium", "estilo", "uso urbano"], "#1d4ed8", "sedan"],
+  ["v41", "Goiania Rent", "Chevrolet", "S10", "Picape diesel", "Goiania", "Automatico", "Diesel", 399, 260000, 3, 4.7, "disponivel", "S10-GYN", 22800, ["diesel", "cacamba", "trabalho"], "#64748b", "suv"],
+  ["v42", "Goiania Rent", "Toyota", "Corolla", "Sedan executivo", "Goiania", "Automatico", "Flex", 229, 168000, 5, 4.8, "disponivel", "COR-GYN", 17500, ["conforto", "porta-malas", "baixo consumo"], "#2563eb", "sedan"],
 ].map(([id, locadora, marca, modelo, categoria, cidade, cambio, combustivel, diaria, precoMercado, disponibilidade, avaliacao, status, placa, quilometragem, recursos, cor, tipo]) => ({
   id: String(id),
   locadora: String(locadora),
@@ -203,7 +251,7 @@ const modelosMundiais = [
 ] as const;
 
 const locadorasGlobais = ["Fast RentCar Centro", "Fast RentCar Premium", "Global Motors", "Euro Drive", "EcoWay", "Familia Rent", "Prime Drive Centro"];
-const cidadesGlobais = ["Sao Paulo", "Rio de Janeiro", "Belo Horizonte", "Curitiba", "Campinas", "Porto Alegre", "Brasilia", "Salvador", "Recife", "Florianopolis"];
+const cidadesGlobais = ["Sao Paulo", "Rio de Janeiro", "Belo Horizonte", "Curitiba", "Campinas", "Porto Alegre", "Brasilia", "Salvador", "Recife", "Florianopolis", "Manaus", "Belem", "Goiania"];
 const coresGlobais = ["#1d4ed8", "#b42318", "#0f766e", "#a16207", "#334155", "#7c3aed", "#0891b2", "#be123c"];
 const statusGlobais: StatusVeiculo[] = ["disponivel", "disponivel", "disponivel", "reservado", "alugado", "manutencao"];
 
@@ -285,28 +333,6 @@ function gerarId(prefixo: string) {
   return `${prefixo}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
 }
 
-function calcularAderencia(veiculo: Veiculo, consulta: string, precoMaximo: number) {
-  const consultaNormalizada = consulta.toLowerCase().trim();
-  const identidade = `${veiculo.marca} ${veiculo.modelo}`.toLowerCase();
-  const texto = `${identidade} ${veiculo.categoria} ${veiculo.recursos.join(" ")} ${veiculo.combustivel}`.toLowerCase();
-  const termos = consulta.toLowerCase().replace(/[^\w\s]/g, " ").split(/\s+/).filter((termo) => termo.length > 2);
-  const matchIdentidade = consultaNormalizada.length >= 2 && identidade.includes(consultaNormalizada);
-  const termoScore = termos.reduce((score, termo) => {
-    if (identidade.includes(termo)) return score + 42;
-    if (texto.includes(termo)) return score + 14;
-    return score;
-  }, matchIdentidade ? 55 : 0);
-  const disponibilidadeScore = Math.min(veiculo.disponibilidade * 4, 28);
-  const precoScore = veiculo.precoMercado <= precoMaximo ? 32 : Math.max(0, 32 - (veiculo.precoMercado - precoMaximo) / 3000);
-  return Math.round(Math.min(100, termoScore + disponibilidadeScore + precoScore + veiculo.avaliacao * 4));
-}
-
-function consultaPareceMarcaOuModelo(consulta: string, veiculos: Veiculo[]) {
-  const termo = consulta.trim().toLowerCase();
-  if (termo.length < 2) return false;
-  return veiculos.some((veiculo) => `${veiculo.marca} ${veiculo.modelo}`.toLowerCase().includes(termo));
-}
-
 function validarCliente(usuario: Usuario, reservas: Reserva[]) {
   const locacaoAtiva = reservas.some(
     (reserva) => reserva.cliente === usuario.nome && ["ativa", "confirmada", "pendente"].includes(reserva.status),
@@ -324,6 +350,7 @@ function statusLabel(status: StatusVeiculo | StatusReserva) {
 
 export function Dashboard() {
   const [estado, setEstado] = useState<AppState>(estadoInicial);
+  const [estadoCarregado, setEstadoCarregado] = useState(false);
   const [aba, setAba] = useState<Perfil>("cliente");
   const [logado, setLogado] = useState<Record<"locadora" | "administrador", boolean>>({ locadora: false, administrador: false });
   const [portalLoginAberto, setPortalLoginAberto] = useState<"locadora" | "administrador" | null>(null);
@@ -348,7 +375,10 @@ export function Dashboard() {
   const [precoMaximo, setPrecoMaximo] = useState(520);
   const [retirada, setRetirada] = useState(dateInput(amanha));
   const [devolucao, setDevolucao] = useState(dateInput(daquiQuatroDias));
-  const [consulta, setConsulta] = useState("carro esportivo ate R$100 mil");
+  const [consulta, setConsulta] = useState("");
+  const [consultoria, setConsultoria] = useState<ConsultoriaResposta | null>(null);
+  const [consultoriaStatus, setConsultoriaStatus] = useState<"idle" | "loading" | "erro">("idle");
+  const [consultoriaErro, setConsultoriaErro] = useState("");
   const [selecionado, setSelecionado] = useState("v2");
   const [feedback, setFeedback] = useState("Pronto para reservar.");
   const [checkoutError, setCheckoutError] = useState("");
@@ -375,13 +405,17 @@ export function Dashboard() {
   });
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setEstado(carregarEstado()), 0);
+    const timer = window.setTimeout(() => {
+      setEstado(carregarEstado());
+      setEstadoCarregado(true);
+    }, 0);
     return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
+    if (!estadoCarregado) return;
     window.localStorage.setItem(storageKey, JSON.stringify(estado));
-  }, [estado]);
+  }, [estado, estadoCarregado]);
 
   const usuario = estado.usuarios.find((item) => item.nome === usuarioAtual) ?? estado.usuarios[0];
   const cidades = ["Todas", ...Array.from(new Set(estado.veiculos.map((veiculo) => veiculo.cidade)))];
@@ -401,17 +435,27 @@ export function Dashboard() {
 
   const sugestoes = useMemo(
     () => {
-      const filtroDireto = consultaPareceMarcaOuModelo(consulta, estado.veiculos);
-      const termo = consulta.trim().toLowerCase();
+      if (consultoria?.sugestoes.length) {
+        return consultoria.sugestoes
+          .map((sugestao) => {
+            const veiculo = estado.veiculos.find((item) => item.id === sugestao.veiculoId);
+            if (!veiculo) return null;
+            return {
+              veiculo,
+              score: sugestao.score,
+              motivo: sugestao.motivo,
+              custoEstimado: sugestao.custoEstimado,
+              adequacaoFinanceira: sugestao.adequacaoFinanceira,
+              alerta: sugestao.alerta ?? "",
+              reservavel: sugestao.reservavel,
+            };
+          })
+          .filter((item): item is NonNullable<typeof item> => Boolean(item));
+      }
 
-      return estado.veiculos
-        .filter((veiculo) => veiculo.status === "disponivel")
-        .filter((veiculo) => !filtroDireto || `${veiculo.marca} ${veiculo.modelo}`.toLowerCase().includes(termo))
-        .map((veiculo) => ({ veiculo, score: calcularAderencia(veiculo, consulta, 100000) }))
-        .sort((a, b) => b.score - a.score || b.veiculo.disponibilidade - a.veiculo.disponibilidade)
-        .slice(0, 4);
+      return [];
     },
-    [estado.veiculos, consulta],
+    [consultoria, estado.veiculos],
   );
 
   const reservasEnriquecidas = estado.reservas.map((reserva) => ({
@@ -439,6 +483,73 @@ export function Dashboard() {
 
   function criarMensagem(publico: Perfil | "todos", texto: string): Mensagem {
     return { id: gerarId("M"), publico, texto, data: "agora" };
+  }
+
+  function alterarConsulta(event: ChangeEvent<HTMLTextAreaElement>) {
+    setConsulta(event.target.value);
+    setConsultoria(null);
+    setConsultoriaErro("");
+    setConsultoriaStatus("idle");
+  }
+
+  async function consultarIA() {
+    if (!consulta.trim()) {
+      setConsultoriaStatus("erro");
+      setConsultoriaErro("Digite seus requisitos para receber uma recomendacao.");
+      return;
+    }
+
+    setConsultoriaStatus("loading");
+    setConsultoriaErro("");
+    setConsultoria(null);
+
+    try {
+      const resposta = await fetch("/api/consultor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          consulta,
+          retirada,
+          devolucao,
+          usuario: {
+            nome: usuario.nome,
+            nascimento: usuario.nascimento,
+            cnhEmitidaEm: usuario.cnhEmitidaEm,
+            comprovante: usuario.comprovante,
+            pendenciaFinanceira: usuario.pendenciaFinanceira,
+          },
+          reservas: estado.reservas.map((reserva) => ({
+            cliente: reserva.cliente,
+            status: reserva.status,
+          })),
+          veiculos: estado.veiculos.map((veiculo) => ({
+            id: veiculo.id,
+            locadora: veiculo.locadora,
+            marca: veiculo.marca,
+            modelo: veiculo.modelo,
+            categoria: veiculo.categoria,
+            cidade: veiculo.cidade,
+            cambio: veiculo.cambio,
+            combustivel: veiculo.combustivel,
+            diaria: veiculo.diaria,
+            disponibilidade: veiculo.disponibilidade,
+            avaliacao: veiculo.avaliacao,
+            status: veiculo.status,
+            recursos: veiculo.recursos,
+          })),
+        }),
+      });
+
+      const dados = (await resposta.json()) as ConsultoriaResposta & { erro?: string };
+      if (!resposta.ok) throw new Error(dados.erro || "Nao foi possivel consultar a IA.");
+
+      setConsultoria(dados);
+      setConsultoriaStatus("idle");
+      setFeedback(dados.perfilExtraido.elegivel ? "Consultoria de IA atualizada." : dados.perfilExtraido.motivoElegibilidade || "Perfil com bloqueio antes da reserva.");
+    } catch (error) {
+      setConsultoriaStatus("erro");
+      setConsultoriaErro(error instanceof Error ? error.message : "Nao foi possivel consultar a IA.");
+    }
   }
 
   function entrar(perfil: "locadora" | "administrador") {
@@ -800,16 +911,37 @@ export function Dashboard() {
         <section className={styles.workspace}>
           <div className={styles.mainColumn}>
             <section className={styles.panel} id="consultoria">
-              <div className={styles.sectionTitle}><span className={styles.kicker}>Consultoria automotiva</span><h2>Sugestoes por necessidade e orcamento</h2></div>
-              <textarea className={styles.textarea} onChange={(event) => setConsulta(event.target.value)} value={consulta} />
-              <div className={styles.suggestionGrid}>
-                {sugestoes.map(({ veiculo, score }) => (
-                  <article className={styles.suggestionCard} key={veiculo.id}>
-                    <img alt={`${veiculo.marca} ${veiculo.modelo}`} src={veiculo.imagem} />
-                    <div><span>{score}% aderente</span><strong>{veiculo.marca} {veiculo.modelo}</strong><p>{veiculo.categoria}. {veiculo.recursos.join(", ")}. {veiculo.disponibilidade} unidade(s).</p><button onClick={() => abrirReserva(veiculo.id)} type="button">Ver e reservar</button></div>
-                  </article>
-                ))}
+              <div className={styles.sectionTitle}><span className={styles.kicker}>Consultoria automotiva</span><h2>Digite Seus Requisitos</h2></div>
+              <textarea className={styles.textarea} onChange={alterarConsulta} value={consulta} />
+              <div className={styles.consultorActions}>
+                <button className={styles.primaryButton} disabled={consultoriaStatus === "loading"} onClick={consultarIA} type="button">
+                  {consultoriaStatus === "loading" ? "Analisando perfil..." : "Analisar com IA"}
+                </button>
               </div>
+              {consultoriaErro ? <p className={styles.checkoutError}>{consultoriaErro}</p> : null}
+              {consultoria ? (
+                <div className={styles.aiSummary}>
+                  <p>{consultoria.resumo}</p>
+                </div>
+              ) : null}
+              {sugestoes.length ? (
+                <div className={styles.suggestionGrid}>
+                  {sugestoes.map(({ veiculo, motivo, adequacaoFinanceira, alerta, reservavel }) => (
+                    <article className={styles.suggestionCard} key={veiculo.id}>
+                      <img alt={`${veiculo.marca} ${veiculo.modelo}`} src={veiculo.imagem} />
+                      <div>
+                        <span>Pronto para aluguel</span>
+                        <strong>{veiculo.marca} {veiculo.modelo}</strong>
+                        <strong className={styles.dailyRate}>{moeda.format(veiculo.diaria)} por dia</strong>
+                        <p>{motivo}</p>
+                        <small className={styles.cardInsight}>{adequacaoFinanceira}</small>
+                        {alerta ? <small className={styles.cardAlert}>{alerta}</small> : null}
+                        <button disabled={!reservavel} onClick={() => abrirReserva(veiculo.id)} type="button">{reservavel ? "Reservar este modelo" : "Bloqueado"}</button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : null}
             </section>
 
             <section className={styles.panel} id="busca">
@@ -840,8 +972,8 @@ export function Dashboard() {
             <section className={styles.panel}>
               <div className={styles.sectionTitle}><span className={styles.kicker}>Fluxo de reserva</span><h2>Dados da locacao</h2></div>
               <label className={styles.field}>Cliente<input value={clienteLogado ? usuario.nome : "Entre para reservar"} readOnly /></label>
-              <label className={styles.field}>Retirada<input value={retirada} min={dateInput(hoje)} onChange={(event) => setRetirada(event.target.value)} type="date" /></label>
-              <label className={styles.field}>Devolucao<input value={devolucao} min={retirada} onChange={(event) => setDevolucao(event.target.value)} type="date" /></label>
+              <label className={styles.field}>Retirada<input value={retirada} min={dateInput(hoje)} onChange={(event) => { setRetirada(event.target.value); setConsultoria(null); }} type="date" /></label>
+              <label className={styles.field}>Devolucao<input value={devolucao} min={retirada} onChange={(event) => { setDevolucao(event.target.value); setConsultoria(null); }} type="date" /></label>
               <label className={styles.field}>Veiculo<select value={selecionado} onChange={(event) => setSelecionado(event.target.value)}>{estado.veiculos.map((veiculo) => <option value={veiculo.id} key={veiculo.id}>{veiculo.marca} {veiculo.modelo}</option>)}</select></label>
               <button className={styles.primaryButton} onClick={() => abrirReserva(selecionado)} type="button">Ver detalhes e reservar</button>
               <p className={styles.feedback}>{feedback}</p>

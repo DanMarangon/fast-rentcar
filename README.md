@@ -5,7 +5,8 @@ Plataforma web de locacao de veiculos criada a partir dos requisitos do BRD e da
 ## Funcionalidades
 
 - Busca de veiculos por cidade, categoria, cambio e diaria maxima.
-- Consultoria automotiva inteligente por texto livre, priorizando disponibilidade, preco e aderencia ao perfil informado.
+- Consultoria automotiva integrada via `/api/consultor`, sem chave de API e sem depender de servicos externos.
+- Analise de texto livre com idade, renda, cidade, periodo, objetivo de uso, regras de elegibilidade e custo estimado da locacao.
 - Criacao de reserva com pagamento simulado, validacao documental e regras de condutor.
 - Bloqueio de nova reserva quando o cliente possui locacao ativa ou pendencia financeira.
 - Cancelamento com multa de 30% quando a retirada ocorre em menos de 24 horas.
@@ -24,6 +25,21 @@ npm run dev
 ```
 
 Abra `http://localhost:3000`.
+
+## Consultor integrado
+
+O consultor funciona junto com o aplicativo. Ele interpreta texto livre, identifica marca/modelo/cambio/cidade/combustivel/renda/idade, aplica restricoes obrigatorias e recomenda apenas carros existentes e disponiveis na frota.
+
+Nao e preciso configurar chave de IA, Ollama ou outro servico para apresentar o projeto.
+
+Opcionalmente, para testar provedores externos, crie um arquivo `.env.local`:
+
+```bash
+FAST_RENTCAR_EXTERNAL_AI=true
+OPENAI_API_KEY=sua_chave_aqui
+OPENAI_MODEL=gpt-5.4-mini
+OLLAMA_MODEL=llama3.1:8b
+```
 
 ## Validacao
 
