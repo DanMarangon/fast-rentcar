@@ -471,11 +471,12 @@ export function Dashboard() {
   const receitaBruta = estado.reservas
     .filter((reserva) => reserva.pagamento === "aprovado" && reserva.status !== "cancelada")
     .reduce((total, reserva) => total + reserva.total, 0);
-  const disponiveis = estado.veiculos.filter((veiculo) => veiculo.status === "disponivel").length;
+  const veiculosDisponiveis = estado.veiculos.filter((veiculo) => veiculo.status === "disponivel");
+  const disponiveis = veiculosDisponiveis.length;
   const alugados = estado.veiculos.filter((veiculo) => veiculo.status === "alugado" || veiculo.status === "reservado").length;
-  const menorDiaria = Math.min(...estado.veiculos.filter((veiculo) => veiculo.status === "disponivel").map((veiculo) => veiculo.diaria));
+  const menorDiaria = veiculosDisponiveis.length ? Math.min(...veiculosDisponiveis.map((veiculo) => veiculo.diaria)) : 0;
   const cidadesAtendidas = new Set(estado.veiculos.map((veiculo) => veiculo.cidade)).size;
-  const melhorAvaliacao = Math.max(...estado.veiculos.map((veiculo) => veiculo.avaliacao));
+  const melhorAvaliacao = estado.veiculos.length ? Math.max(...estado.veiculos.map((veiculo) => veiculo.avaliacao)) : 0;
 
   function atualizarEstado(mutacao: (atual: AppState) => AppState) {
     setEstado((atual) => mutacao(atual));
@@ -703,7 +704,7 @@ export function Dashboard() {
 
   function cancelarReserva(id: string) {
     const reserva = estado.reservas.find((item) => item.id === id);
-    if (!reserva || reserva.status === "cancelada") return;
+    if (!reserva || reserva.status === "cancelada" || reserva.status === "concluida") return;
     const horasAteRetirada = (new Date(`${reserva.retirada}T10:00:00`).getTime() - Date.now()) / 3600000;
     const multa = horasAteRetirada < 24 ? reserva.total * 0.3 : 0;
 
@@ -721,6 +722,10 @@ export function Dashboard() {
 
   function mudarStatusReserva(id: string, status: StatusReserva) {
     const reserva = estado.reservas.find((item) => item.id === id);
+    if (!reserva || reserva.status === "cancelada" || reserva.status === "concluida") return;
+    if (status === "ativa" && !["pendente", "confirmada"].includes(reserva.status)) return;
+    if (status === "concluida" && reserva.status !== "ativa") return;
+
     atualizarEstado((atual) => ({
       ...atual,
       reservas: atual.reservas.map((item) =>
@@ -735,7 +740,11 @@ export function Dashboard() {
       ),
       veiculos: atual.veiculos.map((veiculo) =>
         reserva?.veiculoId === veiculo.id
-          ? { ...veiculo, status: status === "ativa" ? "alugado" : status === "concluida" ? "disponivel" : veiculo.status }
+          ? {
+              ...veiculo,
+              status: status === "ativa" ? "alugado" : status === "concluida" ? "disponivel" : veiculo.status,
+              disponibilidade: status === "concluida" ? veiculo.disponibilidade + 1 : veiculo.disponibilidade,
+            }
           : veiculo,
       ),
       mensagens: [criarMensagem("locadora", `Reserva ${id} atualizada para ${status}.`), ...atual.mensagens],
@@ -745,7 +754,15 @@ export function Dashboard() {
   function alternarStatusVeiculo(id: string, status: StatusVeiculo) {
     atualizarEstado((atual) => ({
       ...atual,
-      veiculos: atual.veiculos.map((veiculo) => (veiculo.id === id ? { ...veiculo, status } : veiculo)),
+      veiculos: atual.veiculos.map((veiculo) =>
+        veiculo.id === id
+          ? {
+              ...veiculo,
+              status,
+              disponibilidade: status === "disponivel" ? Math.max(1, veiculo.disponibilidade) : 0,
+            }
+          : veiculo,
+      ),
     }));
   }
 
@@ -769,6 +786,11 @@ export function Dashboard() {
   }
 
   function adicionarVeiculo() {
+    if (!novoVeiculo.marca.trim() || !novoVeiculo.modelo.trim() || !novoVeiculo.categoria.trim() || !novoVeiculo.cidade.trim()) {
+      setFeedback("Preencha marca, modelo, categoria e cidade antes de cadastrar.");
+      return;
+    }
+
     const id = gerarId("V");
     atualizarEstado((atual) => ({
       ...atual,
@@ -784,7 +806,7 @@ export function Dashboard() {
           combustivel: novoVeiculo.combustivel,
           diaria: Number(novoVeiculo.diaria) || 180,
           precoMercado: Number(novoVeiculo.precoMercado) || 90000,
-          disponibilidade: 1,
+          disponibilidade: novoVeiculo.status === "disponivel" ? 1 : 0,
           avaliacao: 4.5,
           status: novoVeiculo.status,
           placa: gerarId("PL"),
