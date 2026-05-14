@@ -30,16 +30,7 @@ Abra `http://localhost:3000`.
 
 O consultor funciona junto com o aplicativo. Ele interpreta texto livre, identifica marca/modelo/cambio/cidade/combustivel/renda/idade, aplica restricoes obrigatorias e recomenda apenas carros existentes e disponiveis na frota.
 
-Nao e preciso configurar chave de IA, Ollama ou outro servico para apresentar o projeto.
-
-Opcionalmente, para testar provedores externos, crie um arquivo `.env.local`:
-
-```bash
-FAST_RENTCAR_EXTERNAL_AI=true
-OPENAI_API_KEY=sua_chave_aqui
-OPENAI_MODEL=gpt-5.4-mini
-OLLAMA_MODEL=llama3.1:8b
-```
+Nao e preciso configurar chaves, modelos externos ou servicos adicionais para apresentar o projeto.
 
 ## Validacao
 

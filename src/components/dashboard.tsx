@@ -76,7 +76,7 @@ type SugestaoConsultor = {
 };
 
 type ConsultoriaResposta = {
-  fonte: "integrada" | "openai" | "ollama" | "local";
+  fonte: "integrada";
   resumo: string;
   criterios: string[];
   avisos: string[];
@@ -514,7 +514,7 @@ export function Dashboard() {
     limparConsultoria();
   }
 
-  async function consultarIA() {
+  async function consultarRequisitos() {
     if (!consulta.trim()) {
       setConsultoriaStatus("erro");
       setConsultoriaErro("Digite seus requisitos para receber uma recomendacao.");
@@ -563,14 +563,14 @@ export function Dashboard() {
       });
 
       const dados = (await resposta.json()) as ConsultoriaResposta & { erro?: string };
-      if (!resposta.ok) throw new Error(dados.erro || "Nao foi possivel consultar a IA.");
+      if (!resposta.ok) throw new Error(dados.erro || "Nao foi possivel consultar a consultoria.");
 
       setConsultoria(dados);
       setConsultoriaStatus("idle");
-      setFeedback(dados.perfilExtraido.elegivel ? "Consultoria de IA atualizada." : dados.perfilExtraido.motivoElegibilidade || "Perfil com bloqueio antes da reserva.");
+      setFeedback(dados.perfilExtraido.elegivel ? "Consultoria atualizada." : dados.perfilExtraido.motivoElegibilidade || "Perfil com bloqueio antes da reserva.");
     } catch (error) {
       setConsultoriaStatus("erro");
-      setConsultoriaErro(error instanceof Error ? error.message : "Nao foi possivel consultar a IA.");
+      setConsultoriaErro(error instanceof Error ? error.message : "Nao foi possivel consultar a consultoria.");
     }
   }
 
@@ -967,8 +967,8 @@ export function Dashboard() {
               <div className={styles.sectionTitle}><span className={styles.kicker}>Consultoria automotiva</span><h2>Digite Seus Requisitos</h2></div>
               <textarea className={styles.textarea} onChange={alterarConsulta} value={consulta} />
               <div className={styles.consultorActions}>
-                <button className={styles.primaryButton} disabled={consultoriaStatus === "loading"} onClick={consultarIA} type="button">
-                  {consultoriaStatus === "loading" ? "Analisando perfil..." : "Analisar com IA"}
+                <button className={styles.primaryButton} disabled={consultoriaStatus === "loading"} onClick={consultarRequisitos} type="button">
+                  {consultoriaStatus === "loading" ? "Analisando perfil..." : "Analisar requisitos"}
                 </button>
               </div>
               {consultoriaErro ? <p className={styles.checkoutError}>{consultoriaErro}</p> : null}
@@ -1077,7 +1077,7 @@ export function Dashboard() {
         <section className={styles.workspace}>
           <div className={styles.mainColumn}>
             <section className={styles.panel}><div className={styles.sectionTitle}><span className={styles.kicker}>Painel administrativo</span><h2>Usuarios, parceiros e transacoes</h2></div><div className={styles.tableList}>{estado.usuarios.map((item) => <article key={item.id}><div><strong>{item.nome}</strong><span>{item.email} | {item.perfil} | documentos: {item.comprovante}</span></div><div className={styles.rowActions}><span className={styles.badge}>{item.bloqueado ? "bloqueado" : "ativo"}</span><button onClick={() => bloquearUsuario(item.id)} type="button">{item.bloqueado ? "Desbloquear" : "Bloquear"}</button></div></article>)}</div></section>
-            <section className={styles.panel}><div className={styles.sectionTitle}><span className={styles.kicker}>Relatorios estrategicos</span><h2>Indicadores do MVP</h2></div><div className={styles.reportGrid}><article><span>Volume de locacoes</span><strong>{estado.reservas.length}</strong></article><article><span>Faturamento total</span><strong>{moeda.format(receitaBruta)}</strong></article><article><span>Repasse as locadoras</span><strong>{moeda.format(receitaBruta * 0.9)}</strong></article><article><span>Tempo medio API</span><strong>312 ms</strong></article><article><span>Uptime monitorado</span><strong>99,95%</strong></article><article><span>Acuracia da IA</span><strong>87%</strong></article></div></section>
+            <section className={styles.panel}><div className={styles.sectionTitle}><span className={styles.kicker}>Relatorios estrategicos</span><h2>Indicadores do MVP</h2></div><div className={styles.reportGrid}><article><span>Volume de locacoes</span><strong>{estado.reservas.length}</strong></article><article><span>Faturamento total</span><strong>{moeda.format(receitaBruta)}</strong></article><article><span>Repasse as locadoras</span><strong>{moeda.format(receitaBruta * 0.9)}</strong></article><article><span>Tempo medio API</span><strong>312 ms</strong></article><article><span>Uptime monitorado</span><strong>99,95%</strong></article><article><span>Precisao da consultoria</span><strong>87%</strong></article></div></section>
             <section className={styles.panel}><div className={styles.sectionTitle}><span className={styles.kicker}>Auditoria da frota</span><h2>Status por modelo</h2></div><div className={styles.auditGrid}>{estado.veiculos.map((veiculo) => <article key={veiculo.id}><strong>{veiculo.marca} {veiculo.modelo}</strong><span>{veiculo.locadora}</span><span>{statusLabel(veiculo.status)} | {veiculo.placa}</span></article>)}</div></section>
           </div>
           <aside className={styles.sideColumn}><section className={styles.panel}><div className={styles.sectionTitle}><span className={styles.kicker}>Monitoramento</span><h2>Alertas e conformidade</h2></div><ul className={styles.checkList}><li>Controle de acesso por login especifico.</li><li>Consentimento LGPD registrado no cadastro.</li><li>Dados de pagamento tratados por gateway seguro.</li><li>Logs de auditoria para reservas e transacoes.</li><li>Tempo de resposta da consultoria abaixo de 2 segundos.</li></ul></section><section className={styles.panel}><div className={styles.sectionTitle}><span className={styles.kicker}>Notificacoes</span><h2>Comunicacao proativa</h2></div><div className={styles.noticeList}>{estado.mensagens.slice(0, 8).map((mensagem) => <article key={mensagem.id}><span>{mensagem.publico} | {mensagem.data}</span><p>{mensagem.texto}</p></article>)}</div></section></aside>

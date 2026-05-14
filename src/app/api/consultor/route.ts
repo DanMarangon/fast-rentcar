@@ -64,7 +64,7 @@ type SugestaoConsultor = {
 };
 
 type ConsultoriaResposta = {
-  fonte: "integrada" | "openai" | "ollama" | "local";
+  fonte: "integrada";
   resumo: string;
   criterios: string[];
   avisos: string[];
@@ -73,12 +73,6 @@ type ConsultoriaResposta = {
 };
 
 const moeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-const modeloPadrao = "gpt-5.4-mini";
-const modeloLocalPadrao = "llama3.1:8b";
-const fallbackLocalHabilitado = process.env.FAST_RENTCAR_LOCAL_AI_FALLBACK === "true";
-const iaExternaHabilitada = process.env.FAST_RENTCAR_EXTERNAL_AI === "true";
-const promptSistemaConsultor =
-  "Voce e o consultor de carros da Fast RentCar. Responda sempre em JSON valido, sem markdown. Priorize fatos declarados na consulta do cliente sobre dados do perfil logado. Recomende apenas IDs existentes em frotaDisponivel. Marca, modelo, cidade, cambio, combustivel e categoria extraidos em intencaoExtraida.restricoesObrigatorias sao restricoes duras quando houver carros que atendam; se totalDisponivelQueAtendeTudo for 0, retorne alternativas reais da frota, explique em resumo/avisos quais requisitos foram flexibilizados e nunca deixe sugestoes vazio se existir algum carro disponivel. Nao recomende Fiat automatico quando o usuario pediu Fiat manual se existir Fiat manual disponivel; se nao existir, marque como alternativa e explique a diferenca. Cada motivo deve ser personalizado para o usuario e para o carro especifico: mencione diferencas reais como marca/modelo pedido, cidade, cambio, combustivel, categoria, recursos, diaria, custo no periodo, renda, objetivo de uso e tradeoffs. Nao use frases genericas repetidas como 'combina com uso geral'. Seja realista: se o cliente nao passa nas regras, marque reservavel como false e explique o bloqueio. Nao invente carros, precos, cidades ou politicas.";
 const marcasConhecidas = [
   "Alfa Romeo",
   "Audi",
@@ -951,7 +945,7 @@ function resumoPedido(
   return elegivel ? `${base}${orcamento}` : `${base} Antes de concluir a reserva, regularize os requisitos da conta.`;
 }
 
-function criarConsultoriaIntegrada(payload: ConsultorPayload, fonte: ConsultoriaResposta["fonte"] = "integrada"): ConsultoriaResposta {
+function criarConsultoriaIntegrada(payload: ConsultorPayload): ConsultoriaResposta {
   const dias = extrairPeriodoDias(payload.consulta, diferencaDias(payload.retirada, payload.devolucao));
   const idadeInformada = extrairIdade(payload.consulta);
   const rendaMensal = extrairRendaMensal(payload.consulta);
@@ -1061,7 +1055,7 @@ function criarConsultoriaIntegrada(payload: ConsultorPayload, fonte: Consultoria
   });
 
   return {
-    fonte,
+    fonte: "integrada",
     resumo: resumoPedido({ marca, modelo, categoria, cidade, cambio, combustivel, objetivo, limiteDiaria, dias, orcamentoDefinido }, ranqueados.length, elegibilidade.elegivel, usouAlternativas),
     criterios: [
       marca ? `Marca solicitada: ${marca}.` : "",
@@ -1087,319 +1081,6 @@ function criarConsultoriaIntegrada(payload: ConsultorPayload, fonte: Consultoria
   };
 }
 
-function extrairTextoOpenAI(data: unknown) {
-  if (!data || typeof data !== "object") return "";
-  const talvezComTexto = data as { output_text?: unknown; output?: unknown };
-  if (typeof talvezComTexto.output_text === "string") return talvezComTexto.output_text;
-  if (!Array.isArray(talvezComTexto.output)) return "";
-
-  return talvezComTexto.output
-    .flatMap((item) => {
-      if (!item || typeof item !== "object" || !Array.isArray((item as { content?: unknown }).content)) return [];
-      return ((item as { content: unknown[] }).content)
-        .map((content) => {
-          if (!content || typeof content !== "object") return "";
-          const texto = (content as { text?: unknown; refusal?: unknown }).text ?? (content as { text?: unknown; refusal?: unknown }).refusal;
-          return typeof texto === "string" ? texto : "";
-        })
-        .filter(Boolean);
-    })
-    .join("\n");
-}
-
-function parseJSONSeguro(texto: string) {
-  try {
-    return JSON.parse(texto);
-  } catch {
-    const match = texto.match(/\{[\s\S]*\}/);
-    if (!match) return undefined;
-    try {
-      return JSON.parse(match[0]);
-    } catch {
-      return undefined;
-    }
-  }
-}
-
-function motivoPareceGenerico(motivo: string) {
-  const texto = normalizarTexto(motivo);
-  return (
-    texto.length < 70 ||
-    /combina com (uso geral|economia|familia|viagem|trabalho|executivo|eficiencia|esportivo), custa/.test(texto) ||
-    /boa aderencia para/.test(texto)
-  );
-}
-
-function normalizarRespostaIA(resposta: unknown, payload: ConsultorPayload, fonte: "openai" | "ollama"): ConsultoriaResposta | undefined {
-  if (!resposta || typeof resposta !== "object") return undefined;
-  const fallback = criarConsultoriaIntegrada(payload, fonte);
-  const dados = resposta as Partial<ConsultoriaResposta>;
-  const veiculosPorId = new Map(payload.veiculos.map((veiculo) => [veiculo.id, veiculo]));
-  const sugestoesEntrada = Array.isArray(dados.sugestoes) ? dados.sugestoes : [];
-  const dias = extrairPeriodoDias(payload.consulta, diferencaDias(payload.retirada, payload.devolucao));
-  const { marca, modelo } = extrairMarcaModelo(payload.consulta, payload.veiculos);
-  const categoria = extrairCategoriaPreferida(payload.consulta);
-  const cidade = extrairCidade(payload.consulta, payload.veiculos);
-  const cambio = extrairCambio(payload.consulta);
-  const combustivel = extrairCombustivel(payload.consulta);
-  const restricoesFortes = { marca, modelo, cidade, cambio, combustivel };
-  const temRestricaoForte = Boolean(marca || modelo || cidade || cambio || combustivel);
-  const contextoMotivo = {
-    objetivo: fallback.perfilExtraido.objetivo,
-    marca,
-    modelo,
-    categoria,
-    cidade,
-    cambio,
-    combustivel,
-    rendaMensal: fallback.perfilExtraido.rendaMensal ?? undefined,
-    dias,
-    limiteDiaria: fallback.perfilExtraido.limiteDiaria,
-  };
-  const sugestoes = sugestoesEntrada
-    .map((item) => item as Partial<SugestaoConsultor>)
-    .filter((item) => typeof item.veiculoId === "string" && veiculosPorId.has(item.veiculoId))
-    .filter((item) => {
-      if (!temRestricaoForte) return true;
-      const veiculo = veiculosPorId.get(item.veiculoId as string);
-      return Boolean(veiculo && falhasRestricoesFortes(veiculo, restricoesFortes).length === 0 && veiculoBateCategoria(veiculo, categoria));
-    })
-    .slice(0, 4)
-    .map((item) => {
-      const veiculo = veiculosPorId.get(item.veiculoId as string)!;
-      const custoEstimado = Math.round(veiculo.diaria * dias * 1.12);
-      const reservavel = fallback.perfilExtraido.elegivel && veiculo.status === "disponivel" && Boolean(item.reservavel ?? true);
-      const motivoIA = typeof item.motivo === "string" ? item.motivo.trim() : "";
-
-      return {
-        veiculoId: veiculo.id,
-        score: Math.max(1, Math.min(100, Math.round(Number(item.score) || 70))),
-        motivo: motivoIA && !motivoPareceGenerico(motivoIA) ? motivoIA.slice(0, 260) : gerarMotivoPersonalizado(veiculo, contextoMotivo),
-        custoEstimado,
-        adequacaoFinanceira:
-          typeof item.adequacaoFinanceira === "string" && item.adequacaoFinanceira.trim()
-            ? item.adequacaoFinanceira.slice(0, 180)
-            : `Estimativa de ${moeda.format(custoEstimado)} para ${dias} diaria(s), com protecao basica.`,
-        alerta:
-          fallback.perfilExtraido.motivoElegibilidade ||
-          (typeof item.alerta === "string" && item.alerta.trim() ? item.alerta.slice(0, 180) : undefined),
-        reservavel,
-      };
-    });
-
-  return {
-    fonte,
-    resumo: typeof dados.resumo === "string" && dados.resumo.trim() ? dados.resumo.slice(0, 260) : fallback.resumo,
-    criterios: Array.isArray(dados.criterios) ? dados.criterios.filter((item) => typeof item === "string").slice(0, 5) : fallback.criterios,
-    avisos: Array.from(new Set([...(Array.isArray(dados.avisos) ? dados.avisos.filter((item) => typeof item === "string") : []), ...fallback.avisos])).slice(0, 4),
-    perfilExtraido: {
-      ...fallback.perfilExtraido,
-      ...(dados.perfilExtraido && typeof dados.perfilExtraido === "object" ? dados.perfilExtraido : {}),
-      periodoDias: dias,
-      limiteDiaria: fallback.perfilExtraido.limiteDiaria,
-      elegivel: fallback.perfilExtraido.elegivel,
-      motivoElegibilidade: fallback.perfilExtraido.motivoElegibilidade,
-    },
-    sugestoes: sugestoes.length ? sugestoes : fallback.sugestoes,
-  };
-}
-
-function montarPromptConsultor(payload: ConsultorPayload) {
-  const dias = extrairPeriodoDias(payload.consulta, diferencaDias(payload.retirada, payload.devolucao));
-  const { marca, modelo } = extrairMarcaModelo(payload.consulta, payload.veiculos);
-  const cidade = extrairCidade(payload.consulta, payload.veiculos);
-  const categoria = extrairCategoriaPreferida(payload.consulta);
-  const cambio = extrairCambio(payload.consulta);
-  const combustivel = extrairCombustivel(payload.consulta);
-  const rendaMensal = extrairRendaMensal(payload.consulta);
-  const limiteTotalInformado = extrairLimiteTotal(payload.consulta);
-  const limiteDiariaInformado = limiteTotalInformado ? Math.floor(limiteTotalInformado / Math.max(1, dias) / 1.12) : extrairLimiteDiaria(payload.consulta);
-  const disponiveis = payload.veiculos.filter((veiculo) => veiculo.status === "disponivel");
-  const restricoesFortes = { marca, modelo, cidade, cambio, combustivel };
-  const exatos = disponiveis.filter((veiculo) => falhasRestricoesFortes(veiculo, restricoesFortes).length === 0).filter((veiculo) => veiculoBateCategoria(veiculo, categoria));
-  const relevantes = exatos.length ? exatos : disponiveis.filter((veiculo) => veiculoBateMarcaModelo(veiculo, marca, modelo) || (cambio ? veiculo.cambio === cambio : false));
-  const complementares = disponiveis.filter((veiculo) => !relevantes.some((item) => item.id === veiculo.id));
-  const veiculos = [...relevantes, ...complementares]
-    .slice(0, 120)
-    .map((veiculo) => ({
-      id: veiculo.id,
-      nome: `${veiculo.marca} ${veiculo.modelo}`,
-      categoria: veiculo.categoria,
-      cidade: veiculo.cidade,
-      cambio: veiculo.cambio,
-      combustivel: veiculo.combustivel,
-      diaria: veiculo.diaria,
-      disponibilidade: veiculo.disponibilidade,
-      avaliacao: veiculo.avaliacao,
-      recursos: veiculo.recursos,
-    }));
-
-  return {
-    consultaDoCliente: payload.consulta,
-    intencaoExtraida: {
-      marca,
-      modelo,
-      categoria,
-      cidade,
-      cambio,
-      combustivel,
-      objetivo: extrairObjetivo(payload.consulta),
-      idade: extrairIdade(payload.consulta),
-      rendaMensal,
-      limiteDiariaInformado,
-      restricoesObrigatorias: {
-        marca,
-        modelo,
-        categoria,
-        cidade,
-        cambio,
-        combustivel,
-      },
-      totalDisponivelQueAtendeTudo: exatos.length,
-    },
-    periodo: { retirada: payload.retirada, devolucao: payload.devolucao, dias },
-    perfilLogado: payload.usuario,
-    reservasDoCliente: payload.reservas.filter((reserva) => reserva.cliente === payload.usuario.nome),
-    frotaDisponivel: veiculos,
-    regrasDaPlataforma: [
-      "Condutor precisa ter pelo menos 21 anos.",
-      "CNH precisa ter no minimo 2 anos de emissao.",
-      "Comprovante de residencia precisa estar aprovado.",
-      "Cliente com locacao ativa, reserva pendente/confirmada ou pendencia financeira nao pode abrir nova reserva.",
-      "Calcule custo estimado como diaria * dias * 1.12 para incluir protecao basica.",
-    ],
-  };
-}
-
-async function consultarOpenAI(payload: ConsultorPayload) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return undefined;
-
-  const prompt = montarPromptConsultor(payload);
-
-  const resposta = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || modeloPadrao,
-      input: [
-        {
-          role: "system",
-          content: promptSistemaConsultor,
-        },
-        {
-          role: "user",
-          content: JSON.stringify(prompt),
-        },
-      ],
-      text: {
-        format: {
-          type: "json_schema",
-          name: "consultoria_fast_rentcar",
-          strict: true,
-          schema: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              resumo: { type: "string" },
-              criterios: { type: "array", items: { type: "string" } },
-              avisos: { type: "array", items: { type: "string" } },
-              perfilExtraido: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  idade: { type: ["number", "null"] },
-                  rendaMensal: { type: ["number", "null"] },
-                  cidade: { type: ["string", "null"] },
-                  objetivo: { type: "string" },
-                  periodoDias: { type: "number" },
-                  limiteDiaria: { type: "number" },
-                  elegivel: { type: "boolean" },
-                  motivoElegibilidade: { type: ["string", "null"] },
-                },
-                required: ["idade", "rendaMensal", "cidade", "objetivo", "periodoDias", "limiteDiaria", "elegivel", "motivoElegibilidade"],
-              },
-              sugestoes: {
-                type: "array",
-                minItems: 0,
-                maxItems: 4,
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    veiculoId: { type: "string" },
-                    score: { type: "number" },
-                    motivo: { type: "string" },
-                    custoEstimado: { type: "number" },
-                    adequacaoFinanceira: { type: "string" },
-                    alerta: { type: ["string", "null"] },
-                    reservavel: { type: "boolean" },
-                  },
-                  required: ["veiculoId", "score", "motivo", "custoEstimado", "adequacaoFinanceira", "alerta", "reservavel"],
-                },
-              },
-            },
-            required: ["resumo", "criterios", "avisos", "perfilExtraido", "sugestoes"],
-          },
-        },
-      },
-      max_output_tokens: 1200,
-      store: false,
-    }),
-  });
-
-  if (!resposta.ok) {
-    const erro = await resposta.text();
-    throw new Error(`OpenAI ${resposta.status}: ${erro.slice(0, 240)}`);
-  }
-
-  const dados = await resposta.json();
-  const texto = extrairTextoOpenAI(dados);
-  return normalizarRespostaIA(parseJSONSeguro(texto), payload, "openai");
-}
-
-async function consultarOllama(payload: ConsultorPayload) {
-  const prompt = montarPromptConsultor(payload);
-  const host = process.env.OLLAMA_HOST || "http://127.0.0.1:11434";
-  const model = process.env.OLLAMA_MODEL || modeloLocalPadrao;
-
-  const resposta = await fetch(`${host.replace(/\/$/, "")}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model,
-      stream: false,
-      format: "json",
-      options: {
-        temperature: 0.2,
-        num_ctx: 12000,
-      },
-      messages: [
-        {
-          role: "system",
-          content: promptSistemaConsultor,
-        },
-        {
-          role: "user",
-          content: JSON.stringify(prompt),
-        },
-      ],
-    }),
-  });
-
-  if (!resposta.ok) {
-    const erro = await resposta.text();
-    throw new Error(`Ollama ${resposta.status}: ${erro.slice(0, 240)}`);
-  }
-
-  const dados = (await resposta.json()) as { message?: { content?: string }; response?: string };
-  const texto = dados.message?.content ?? dados.response ?? "";
-  return normalizarRespostaIA(parseJSONSeguro(texto), payload, "ollama");
-}
-
 function payloadValido(payload: Partial<ConsultorPayload>): payload is ConsultorPayload {
   return (
     typeof payload.consulta === "string" &&
@@ -1416,28 +1097,6 @@ export async function POST(request: Request) {
     const payload = (await request.json()) as Partial<ConsultorPayload>;
     if (!payloadValido(payload)) {
       return NextResponse.json({ erro: "Payload invalido para consultoria." }, { status: 400 });
-    }
-
-    if (iaExternaHabilitada) {
-      try {
-        const respostaLocal = await consultarOllama(payload);
-        if (respostaLocal) return NextResponse.json(respostaLocal);
-      } catch (error) {
-        console.error("Falha ao consultar Ollama.", error);
-      }
-
-      try {
-        const respostaIA = await consultarOpenAI(payload);
-        if (respostaIA) return NextResponse.json(respostaIA);
-      } catch (error) {
-        console.error("Falha ao consultar OpenAI.", error);
-        if (!fallbackLocalHabilitado) {
-          return NextResponse.json(
-            { erro: "A IA externa falhou ao responder. A consultoria integrada continua disponivel se FAST_RENTCAR_EXTERNAL_AI nao estiver ativo." },
-            { status: 502 },
-          );
-        }
-      }
     }
 
     return NextResponse.json(criarConsultoriaIntegrada(payload));
