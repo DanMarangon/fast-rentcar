@@ -414,7 +414,11 @@ export function Dashboard() {
 
   useEffect(() => {
     if (!estadoCarregado) return;
-    window.localStorage.setItem(storageKey, JSON.stringify(estado));
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(estado));
+    } catch {
+      setFeedback("Nao foi possivel salvar os dados no navegador. Reduza imagens ou limpe o armazenamento local.");
+    }
   }, [estado, estadoCarregado]);
 
   const usuario = estado.usuarios.find((item) => item.nome === usuarioAtual) ?? estado.usuarios[0];
@@ -793,12 +797,22 @@ export function Dashboard() {
   function carregarImagem(event: ChangeEvent<HTMLInputElement>) {
     const arquivo = event.target.files?.[0];
     if (!arquivo) return;
+    if (!arquivo.type.startsWith("image/")) {
+      setFeedback("Envie um arquivo de imagem valido.");
+      return;
+    }
+    if (arquivo.size > 1_500_000) {
+      setFeedback("Imagem muito grande para salvar no navegador. Use um arquivo de ate 1,5 MB.");
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
         setNovoVeiculo((atual) => ({ ...atual, imagem: reader.result as string }));
       }
     };
+    reader.onerror = () => setFeedback("Nao foi possivel carregar a imagem selecionada.");
     reader.readAsDataURL(arquivo);
   }
 
